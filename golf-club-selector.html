@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Club Selector</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1a0f;
+    --surface: #0f2318;
+    --surface2: #142d1f;
+    --green: #2d7a3a;
+    --green-light: #4caf61;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --text: #e8f0ea;
+    --text-muted: #7a9e82;
+    --border: #1e3d28;
+    --accent: #a8d5b5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(45,122,58,0.25) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(201,168,76,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(45,122,58,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,122,58,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo-tag {
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    color: var(--green-light);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  h1 span {
+    color: var(--gold);
+    display: block;
+    font-style: italic;
+  }
+
+  .subtitle {
+    margin-top: 16px;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 24px auto;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .field:hover {
+    border-color: var(--green);
+    background: var(--surface2);
+  }
+
+  .field:focus-within {
+    border-color: var(--green-light);
+    background: var(--surface2);
+  }
+
+  .field label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .field select {
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  .field select option {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .field .unit {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .field-full {
+    grid-column: 1 / -1;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--green);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-bottom: 32px;
+    font-weight: 500;
+  }
+
+  .btn:hover { background: var(--green-light); }
+  .btn:active { transform: scale(0.99); }
+
+  /* Result Card */
+  .result {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    animation: slideUp 0.4s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result.show { display: block; }
+
+  .result-header {
+    background: linear-gradient(135deg, var(--green) 0%, #1a5228 100%);
+    padding: 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(201,168,76,0.15), transparent 60%);
+  }
+
+  .result-label {
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .club-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    color: white;
+    position: relative;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  .club-emoji {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .confidence-bar {
+    margin-top: 16px;
+    position: relative;
+  }
+
+  .confidence-track {
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+
+  .confidence-text {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+  }
+
+  .result-body {
+    padding: 28px 32px;
+  }
+
+  .adjustments {
+    margin-bottom: 24px;
+  }
+
+  .adj-title {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .adj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .adj-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+
+  .adj-item-label {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .adj-item-value {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .adj-item-value.positive { color: var(--green-light); }
+  .adj-item-value.negative { color: #e87a7a; }
+  .adj-item-value.neutral { color: var(--accent); }
+
+  .alternatives {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+
+  .alt-title {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .alt-clubs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .alt-club {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .alt-club:hover {
+    border-color: var(--green);
+    color: var(--text);
+  }
+
+  .tip-box {
+    margin-top: 20px;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--gold-light);
+    line-height: 1.6;
+  }
+
+  .tip-box strong {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--gold);
+  }
+
+  .error {
+    background: rgba(232,122,122,0.1);
+    border: 1px solid rgba(232,122,122,0.3);
+    border-radius: 4px;
+    padding: 14px 20px;
+    color: #e87a7a;
+    font-size: 12px;
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="container">
+  <header>
+    <span class="logo-tag">⛳ Precision Golf</span>
+    <h1>Club<span>Selector</span></h1>
+    <div class="divider"></div>
+    <p class="subtitle">Enter your conditions for a data-driven recommendation</p>
+  </header>
+
+  <div class="error" id="error"></div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Distance to Pin</label>
+      <input type="number" id="distance" placeholder="150" min="1" max="350">
+      <span class="unit">yards</span>
+    </div>
+
+    <div class="field">
+      <label>Golfer Handicap</label>
+      <input type="number" id="handicap" placeholder="12" min="0" max="54">
+      <span class="unit">HCP</span>
+    </div>
+
+    <div class="field">
+      <label>Wind Speed</label>
+      <input type="number" id="windSpeed" placeholder="10" min="0" max="60">
+      <span class="unit">mph</span>
+    </div>
+
+    <div class="field">
+      <label>Wind Direction</label>
+      <select id="windDir">
+        <option value="none">— Calm / No Wind</option>
+        <option value="headwind">⬆ Headwind (into face)</option>
+        <option value="tailwind">⬇ Tailwind (from behind)</option>
+        <option value="crosswind">↔ Crosswind</option>
+        <option value="quartering-head">↗ Quartering Headwind</option>
+        <option value="quartering-tail">↘ Quartering Tailwind</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Elevation Change</label>
+      <input type="number" id="elevation" placeholder="0" min="-100" max="100">
+      <span class="unit">ft</span>
+    </div>
+
+    <div class="field">
+      <label>Air Temperature</label>
+      <input type="number" id="temperature" placeholder="72" min="-20" max="120">
+      <span class="unit">°F</span>
+    </div>
+  </div>
+
+  <button class="btn" onclick="selectClub()">▶ Calculate Recommended Club</button>
+
+  <div class="result" id="result">
+    <div class="result-header">
+      <div class="result-label">Recommended Club</div>
+      <span class="club-emoji" id="clubEmoji">🏌️</span>
+      <div class="club-name" id="clubName">—</div>
+      <div class="confidence-bar">
+        <div class="confidence-track">
+          <div class="confidence-fill" id="confidenceFill" style="width:0%"></div>
+        </div>
+        <div class="confidence-text" id="confidenceText"></div>
+      </div>
+    </div>
+
+    <div class="result-body">
+      <div class="adjustments">
+        <div class="adj-title">Shot Adjustments</div>
+        <div class="adj-grid" id="adjGrid"></div>
+      </div>
+
+      <div class="alternatives">
+        <div class="alt-title">Consider Also</div>
+        <div class="alt-clubs" id="altClubs"></div>
+      </div>
+
+      <div class="tip-box" id="tipBox"></div>
+    </div>
+  </div>
+
+  <footer>All distances assume center-face contact at sea level as baseline</footer>
+</div>
+
+<script>
+// Club data: carry yardage baseline for a 1 HCP golfer.
+// 1 HCP: 9-iron=135, 8-iron=145, 7-iron=155, 6-iron=165, 5-iron=175 etc.
+// 15 HCP multiplier (0.88) gives: 9-iron~119, 8-iron~128 → 8-iron closest to 135 ✓
+const clubs = [
+  { name: "Driver",         base: 260, emoji: "🏌️", type: "wood" },
+  { name: "3-Wood",         base: 235, emoji: "🪵", type: "wood" },
+  { name: "5-Wood",         base: 215, emoji: "🪵", type: "wood" },
+  { name: "3-Hybrid",       base: 200, emoji: "🏑", type: "hybrid" },
+  { name: "4-Hybrid",       base: 185, emoji: "🏑", type: "hybrid" },
+  { name: "4-Iron",         base: 185, emoji: "⛳", type: "iron" },
+  { name: "5-Iron",         base: 175, emoji: "⛳", type: "iron" },
+  { name: "6-Iron",         base: 165, emoji: "⛳", type: "iron" },
+  { name: "7-Iron",         base: 155, emoji: "⛳", type: "iron" },
+  { name: "8-Iron",         base: 145, emoji: "⛳", type: "iron" },
+  { name: "9-Iron",         base: 135, emoji: "⛳", type: "iron" },
+  { name: "Pitching Wedge", base: 123, emoji: "🥏", type: "wedge" },
+  { name: "Gap Wedge",      base: 108,  emoji: "🥏", type: "wedge" },
+  { name: "Sand Wedge",     base: 82,  emoji: "🥏", type: "wedge" },
+  { name: "Lob Wedge",      base: 65,  emoji: "🥏", type: "wedge" },
+];
+
+// Baseline = 1 HCP (1.0). Higher HCP = lower multiplier.
+// Verified: 1 HCP @ 135 yds → 9-iron (base 125 × 1.0 = 125... hmm, need 9-iron=135)
+// So set 9-iron base = 135, and 1 HCP = 1.0. Then 15 HCP (0.88) = 135×0.88 = 119 for 9-iron.
+// 8-iron at 15 HCP = 145×0.88 = 127.6. Closest to 135 → 8-iron ✓
+function handicapMultiplier(hcp) {
+  if (hcp <= 1)  return 1.00;
+  if (hcp <= 5)  return 0.99;
+  if (hcp <= 10) return 0.97;
+  if (hcp <= 15) return 0.93;
+  if (hcp <= 20) return 0.87;
+  if (hcp <= 25) return 0.81;
+  if (hcp <= 30) return 0.75;
+  return 0.63;
+}
+
+function windEffect(speed, direction) {
+  // Returns yardage adjustment
+  if (!direction || direction === 'none' || !speed) return 0;
+  const s = parseFloat(speed);
+  switch (direction) {
+    case 'headwind':          return -(s * 1.5);
+    case 'tailwind':          return  (s * 1.0);
+    case 'crosswind':         return -(s * 0.5);
+    case 'quartering-head':   return -(s * 0.9);
+    case 'quartering-tail':   return  (s * 0.6);
+    default: return 0;
+  }
+}
+
+function elevationEffect(elevFt) {
+  // ~1 yard per 3 feet of elevation (uphill = less distance, downhill = more)
+  return -(elevFt / 3);
+}
+
+function tempEffect(tempF) {
+  // Ball loses ~2 yards per 10°F below 70°F; gains slightly above
+  const baseline = 70;
+  const diff = tempF - baseline;
+  return diff * 0.2;
+}
+
+function selectClub() {
+  const distance   = parseFloat(document.getElementById('distance').value);
+  const handicap   = parseFloat(document.getElementById('handicap').value);
+  const windSpeed  = parseFloat(document.getElementById('windSpeed').value) || 0;
+  const windDir    = document.getElementById('windDir').value;
+  const elevation  = parseFloat(document.getElementById('elevation').value) || 0;
+  const temp       = parseFloat(document.getElementById('temperature').value);
+
+  const errEl = document.getElementById('error');
+  errEl.style.display = 'none';
+
+  if (isNaN(distance) || distance <= 0) {
+    errEl.textContent = 'Please enter a valid distance to the pin.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (isNaN(handicap) || handicap < 0) {
+    errEl.textContent = 'Please enter a valid handicap (0–54).';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (isNaN(temp)) {
+    errEl.textContent = 'Please enter a valid temperature.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Adjustments
+  const wAdj = windEffect(windSpeed, windDir);
+  const eAdj = elevationEffect(elevation);
+  const tAdj = tempEffect(temp);
+  const hMul = handicapMultiplier(handicap);
+
+  // Effective distance the golfer needs to cover considering conditions
+  // Wind/elevation/temp all affect how far the ball travels, so we adjust
+  // the target distance accordingly (we need to hit the ball as if it were
+  // a different distance in neutral conditions)
+  const neutralDistance = distance - wAdj - eAdj - tAdj;
+
+  // Now factor in handicap to determine what club this golfer can use to achieve neutralDistance
+  // The club base distances assume scratch; we scale by handicap multiplier
+  let best = null;
+  let bestDiff = Infinity;
+
+  clubs.forEach(club => {
+    const adjusted = club.base * hMul;
+    const diff = Math.abs(adjusted - neutralDistance);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = club;
+    }
+  });
+
+  // Alternatives (clubs within 15 yards)
+  const bestCarry = best.base * hMul;
+  const alts = clubs.filter(c => c.name !== best.name && Math.abs(c.base * hMul - neutralDistance) <= 18)
+                     .map(c => c.name);
+
+  // Confidence based on how close the match is
+  const confidence = Math.max(0, Math.min(100, 100 - (bestDiff * 1.5)));
+
+  // Build adjustments display
+  const adjs = [
+    { label: "Wind Effect",      value: wAdj, suffix: "yds" },
+    { label: "Elevation",        value: -eAdj, suffix: "yds" },
+    { label: "Temperature",      value: tAdj, suffix: "yds" },
+    { label: "Effective Dist",   value: Math.round(neutralDistance), suffix: "yds", absolute: true },
+    { label: "Handicap Factor",  value: Math.round((hMul - 1) * 100), suffix: "%", hcp: true },
+    { label: "Est. Carry",       value: Math.round(bestCarry), suffix: "yds", absolute: true },
+  ];
+
+  // Tip generation
+  const tips = [];
+  if (windDir === 'headwind' && windSpeed > 15) tips.push("Strong headwind — take 1–2 extra clubs and swing smooth. Don't swing harder into the wind.");
+  if (windDir === 'tailwind' && windSpeed > 10) tips.push("Use tailwind to your advantage — take less club and enjoy the extra roll-out.");
+  if (elevation > 30) tips.push("Steep uphill lie: the ball won't reach its usual distance. Aim your body at the slope.");
+  if (elevation < -30) tips.push("Downhill to the pin: expect extra carry and roll. Play for a shorter carry distance.");
+  if (temp < 45) tips.push("Cold air is denser and the ball is stiffer — expect 5–10% reduced distance.");
+  if (handicap > 25) tips.push("Focus on center contact above all else. A well-struck shorter club beats a mis-hit longer one every time.");
+  if (handicap <= 5 && windSpeed > 20) tips.push("As a low handicapper, consider shaping the shot into the wind for better control.");
+  if (tips.length === 0) tips.push("Conditions are relatively neutral. Commit to the club, take a smooth tempo swing, and trust your yardage.");
+
+  // Render
+  document.getElementById('clubName').textContent = best.name;
+  document.getElementById('clubEmoji').textContent = best.emoji;
+  document.getElementById('confidenceText').textContent = `${Math.round(confidence)}% confidence match`;
+  setTimeout(() => {
+    document.getElementById('confidenceFill').style.width = confidence + '%';
+  }, 100);
+
+  const adjGrid = document.getElementById('adjGrid');
+  adjGrid.innerHTML = adjs.map(a => {
+    let cls, display;
+    if (a.absolute || a.hcp) {
+      cls = 'neutral';
+      display = a.hcp ? `${a.value > 0 ? '+' : ''}${a.value}${a.suffix}` : `${a.value} ${a.suffix}`;
+    } else {
+      cls = a.value > 0 ? 'positive' : a.value < 0 ? 'negative' : 'neutral';
+      display = `${a.value > 0 ? '+' : ''}${Math.round(a.value)} ${a.suffix}`;
+    }
+    return `<div class="adj-item">
+      <div class="adj-item-label">${a.label}</div>
+      <div class="adj-item-value ${cls}">${display}</div>
+    </div>`;
+  }).join('');
+
+  const altEl = document.getElementById('altClubs');
+  if (alts.length > 0) {
+    altEl.innerHTML = alts.map(a => `<div class="alt-club">${a}</div>`).join('');
+  } else {
+    altEl.innerHTML = '<div class="alt-club" style="opacity:0.5">No close alternatives</div>';
+  }
+
+  document.getElementById('tipBox').innerHTML = `<strong>📋 Caddie Tip</strong>${tips[0]}`;
+
+  const resultEl = document.getElementById('result');
+  resultEl.classList.remove('show');
+  void resultEl.offsetWidth;
+  resultEl.classList.add('show');
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Allow Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') selectClub();
+});
+</script>
+</body>
+</html>
